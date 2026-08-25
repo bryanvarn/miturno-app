@@ -427,16 +427,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 const API='https://script.google.com/macros/s/AKfycbxl7G8F-UrLoolpEEZ2SLKfQ2L2vwLBfwBCtFv1XcDkO4GDkel9vhTxr3-GVtPOFhDo/exec';
 let SESSION={};let IS_DEMO=false;
 
-async function apiGet(path,params={}){
-  const qs=new URLSearchParams({path,...params}).toString();
-  const res=await fetch(`${API}?${qs}`);
+async function apiGet(path, params={}) {
+  const qs = new URLSearchParams({path, ...params}).toString();
+  const res = await fetch(API + '?' + qs);
   return res.json();
 }
-async function apiPost(path,body={}){
-  const res=await fetch(`${API}?path=${encodeURIComponent(path)}`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
-  });
+
+// GAS CORS fix: POST data encoded as GET parameter
+async function apiPost(path, body={}) {
+  const encoded = encodeURIComponent(JSON.stringify(body));
+  const url = API + '?path=' + encodeURIComponent(path) + '&payload=' + encoded;
+  const res = await fetch(url);
   return res.json();
 }
 </script>

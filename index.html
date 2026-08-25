@@ -846,6 +846,21 @@ async function apiPost(path,body={}){
 <!-- TOAST is already in file above -->
 
 <script>
+// Event delegation for staff buttons (avoids inline onclick quote issues)
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const action = btn.getAttribute('data-action');
+  const id     = btn.getAttribute('data-id');
+  const name   = btn.getAttribute('data-name') || '';
+  if(action==='callnext') callNextForStaff(id, name);
+  if(action==='finish')   finishForStaff(id, name);
+  if(action==='dayoff')   markOff(id);
+  if(action==='remove')   removeStaff(id);
+  if(action==='delsvc') btn.closest('.svc-item') && btn.closest('.svc-item').remove();
+});
+
+
 // ── DEMO DATA ──────────────────────────────────────────────────────
 const DEMO = {
   business_id:'demo-001', name:'Barbería El Maestro',
@@ -1088,27 +1103,27 @@ function renderStaff(staff, containerId, isDash){
   if(!el) return;
   if(!staff.length){
     el.innerHTML = '<div class="q-empty"><i class="ti ti-users"></i><p>Sin empleados registrados</p></div>'
-      + (!isDash ? '<div class="add-staff-card" onclick="openModal('modal-add-staff')"><i class="ti ti-user-plus"></i><span>Agregar primer empleado</span></div>' : '');
+      + (!isDash ? '<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar primer empleado</span></div>' : '');
     return;
   }
-  const waitingQ = IS_DEMO ? DEMO.queue.filter(q=>q.status==='waiting') : [];
+  const waitingQ = IS_DEMO ? DEMO.queue.filter(function(q){return q.status==='waiting';}) : [];
   let html = staff.map(function(s){
     const ci  = (s.color_index||0) % 4;
     const av  = avCols[ci];
     const sc  = s.status==='busy' ? 'busy' : s.status==='day_off' ? 'day_off' : 'free';
-    const sl  = s.status==='busy' ? 'Ocupado' : s.status==='day_off' ? 'Día libre' : 'Disponible';
+    const sl  = s.status==='busy' ? 'Ocupado' : s.status==='day_off' ? 'Dia libre' : 'Disponible';
     const dotColor = sc==='busy' ? 'var(--red)' : sc==='free' ? 'var(--green)' : 'var(--text4)';
     const clientBox = s.status==='busy'
       ? '<div class="bc-cname">Atendiendo cliente</div><div class="bc-csvc">En servicio</div>'
-      : '<div style="text-align:center;color:var(--text4);font-size:11px;padding:6px 0">'+(s.status==='day_off'?'Día libre':'Sin cliente activo')+'</div>';
+      : '<div style="text-align:center;color:var(--text4);font-size:11px;padding:6px 0">'+(s.status==='day_off'?'Dia libre':'Sin cliente activo')+'</div>';
     const actionBtn = s.status==='available' && waitingQ.length>0
-      ? '<button class="bc-btn primary" onclick="callNextForStaff(''+s.id+'',''+s.name+'')"><i class="ti ti-user-plus"></i>Llamar sig.</button>'
+      ? '<button class="bc-btn primary" data-action="callnext" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-user-plus"></i>Llamar sig.</button>'
       : s.status==='busy'
-      ? '<button class="bc-btn green" onclick="finishForStaff(''+s.id+'',''+s.name+'')"><i class="ti ti-check"></i>Terminado</button>'
+      ? '<button class="bc-btn green" data-action="finish" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-check"></i>Terminado</button>'
       : '<button class="bc-btn" disabled style="opacity:.3;font-size:11px">Sin cola</button>';
     const extraBtns = isDash ? ''
-      : '<button class="bc-btn danger" onclick="markOff(''+s.id+'')" style="max-width:80px;font-size:10px"><i class="ti ti-moon"></i>Libre</button>'
-        + '<button class="bc-btn" onclick="removeStaff(''+s.id+'')" style="max-width:32px"><i class="ti ti-trash"></i></button>';
+      : '<button class="bc-btn danger" data-action="dayoff" data-id="'+s.id+'" style="max-width:80px;font-size:10px"><i class="ti ti-moon"></i>Libre</button>'
+        + '<button class="bc-btn" data-action="remove" data-id="'+s.id+'" style="max-width:32px"><i class="ti ti-trash"></i></button>';
     return '<div class="bc '+sc+'" id="bc-'+s.id+'">'
       + '<div class="bc-head">'
       + '<div class="bc-av" style="background:'+av.bg+';color:'+av.color+';border:1px solid '+av.border+'">'+(s.avatar_initials||s.name[0])+'</div>'
@@ -1119,9 +1134,10 @@ function renderStaff(staff, containerId, isDash){
       + '<div class="bc-actions">'+actionBtn+extraBtns+'</div>'
       + '</div>';
   }).join('');
-  if(!isDash) html += '<div class="add-staff-card" onclick="openModal('modal-add-staff')"><i class="ti ti-user-plus"></i><span>Agregar empleado</span></div>';
+  if(!isDash) html += '<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar empleado</span></div>';
   el.innerHTML = html;
 }
+
 
 async function saveStaff(){
   const name = document.getElementById('m-staff-name').value.trim();
@@ -1423,7 +1439,7 @@ function addSvcItem(){
   if(!n) return;
   const item = document.createElement('div');
   item.className = 'svc-item';
-  item.innerHTML = '<span class="svc-name">'+n+'</span><span class="svc-dur">'+(d||'--')+' min</span><span class="svc-price">RD$'+(p||'--')+'</span><button class="svc-del" onclick="this.closest(\'.svc-item\').remove()"><i class="ti ti-trash"></i></button>';
+  item.innerHTML = '<span class="svc-name">'+n+'</span><span class="svc-dur">'+(d||'--')+' min</span><span class="svc-price">RD$'+(p||'--')+'</span><button class="svc-del" data-action="delsvc"><i class="ti ti-trash"></i></button>';
   document.getElementById('svc-list').appendChild(item);
   ['nsn','nsd','nsp'].forEach(function(id){ document.getElementById(id).value=''; });
 }

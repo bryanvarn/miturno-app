@@ -482,7 +482,7 @@ async function apiPost(path, body={}) {
       <div class="auth-inner" style="max-width:460px">
         <div class="scene-card">
           <div class="scene-h">Turnos y citas<br>para <span>cualquier negocio</span></div>
-          <div class="scene-sub">Cola digital en tiempo real, citas agendadas y recordatorios automáticos por correo</div>
+          <div class="scene-sub">Cola digital en tiempo real, citas agendadas y recordatorios automáticos por correo — todo conectado a Notion y Google.</div>
           <div class="feat-row"><div class="feat-icon hi"><i class="ti ti-clock" aria-hidden="true"></i></div><div class="feat-text"><strong>Cola en tiempo real</strong> — tus clientes saben exactamente cuánto esperan</div></div>
           <div class="feat-row"><div class="feat-icon cy"><i class="ti ti-calendar-check" aria-hidden="true"></i></div><div class="feat-text"><strong>Citas + walk-ins</strong> — mezcla ambos flujos sin conflictos</div></div>
           <div class="feat-row"><div class="feat-icon gr"><i class="ti ti-mail" aria-hidden="true"></i></div><div class="feat-text"><strong>Correos automáticos</strong> — confirmación, avisos de turno y recordatorios 1h/1d</div></div>
@@ -510,7 +510,7 @@ async function apiPost(path, body={}) {
           <div class="field"><label class="label">Nombre del negocio</label><input class="input" id="r-name" placeholder="Barbería El Maestro"/></div>
           <div class="field"><label class="label">Categoría</label>
             <select class="select" id="r-cat">
-              <option>Peluquería</option><option>Fotografia</option><option>Salón</option>
+              <option>Peluquería</option><option>Barbería</option><option>Salón</option>
               <option>Maquillaje</option><option>Spa</option><option>Uñas</option><option>Otro</option>
             </select>
           </div>
@@ -545,14 +545,14 @@ async function apiPost(path, body={}) {
           <div class="scene-h">Listo en<br><span>2 minutos.</span></div>
           <div class="scene-sub">Crea tu cuenta y comparte el link de tu sala hoy mismo. Tus clientes lo verán en tiempo real desde su celular.</div>
           <div class="feat-row"><div class="feat-icon hi"><i class="ti ti-link" aria-hidden="true"></i></div><div class="feat-text"><strong>elturno.app/sala/tu-negocio</strong> — compártelo en Instagram o WhatsApp</div></div>
-          <div class="feat-row"><div class="feat-icon cy"><i class="ti ti-database" aria-hidden="true"></i></div><div class="feat-text"><strong>base de datos privada</strong> — tus datos siempre visibles y editables</div></div>
-          <div class="feat-row"><div class="feat-icon gr"><i class="ti ti-brand-google" aria-hidden="true"></i></div><div class="feat-text"><strong>Datos seguros</strong> — backend 100% tuyo, cero servidores</div></div>
+          <div class="feat-row"><div class="feat-icon cy"><i class="ti ti-database" aria-hidden="true"></i></div><div class="feat-text"><strong>Notion como base de datos</strong> — tus datos siempre visibles y editables</div></div>
+          <div class="feat-row"><div class="feat-icon gr"><i class="ti ti-brand-google" aria-hidden="true"></i></div><div class="feat-text"><strong>Google Apps Script</strong> — backend 100% tuyo, cero servidores</div></div>
         </div>
       </div>
     </div>
   </div>
 </div>
-Datos
+
 <!-- ══════════════════════════════════════════
      SCREEN: ADMIN
 ══════════════════════════════════════════ -->
@@ -1448,6 +1448,22 @@ function addSvcItem(){
 // ── INIT ─────────────────────────────────────────────────────────
 document.getElementById('sv-apt-date').valueAsDate = new Date();
 try{ document.getElementById('ma-dt').min = new Date().toISOString().slice(0,16); }catch(e){}
+
+// Auto-show sala pública if ?sala= param in URL
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var sala = params.get('sala');
+  if(sala){
+    document.getElementById('sala-biz-name').textContent = sala;
+    showScreen('s-sala');
+    // Try to load real data from GAS
+    apiGet('business', {slug: sala}).then(function(res){
+      if(res.ok && res.data){
+        document.getElementById('sala-biz-name').textContent = res.data.name || sala;
+      }
+    }).catch(function(){});
+  }
+})();
 </script>
 </body>
 </html>

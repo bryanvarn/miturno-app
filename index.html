@@ -578,7 +578,7 @@ async function apiPost(path, body={}) {
       <div class="nav-item" onclick="adminGoto('report',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i>Reporte</div>
       <div class="nav-item" onclick="adminGoto('settings',this)"><i class="ti ti-settings" aria-hidden="true"></i>Configuración</div>
       <div class="sb-sec">Vista pública</div>
-      <div class="nav-item" onclick="showScreen('s-sala')"><i class="ti ti-eye" aria-hidden="true"></i>Ver sala</div>
+      <div class="nav-item" onclick="openSalaFromAdmin()"><i class="ti ti-eye" aria-hidden="true"></i>Ver sala</div>
       <div class="sb-footer">
         <div class="sb-user-card">
           <div class="sb-av" id="sb-av">A</div>
@@ -662,8 +662,8 @@ async function apiPost(path, body={}) {
         <!-- REPORT -->
         <div class="page" id="p-report">
           <div style="display:flex;gap:8px;margin-bottom:18px">
-            <button class="btn btn-outline btn-sm" onclick="showToast('Exportando CSV...','warn')"><i class="ti ti-download" aria-hidden="true"></i>CSV</button>
-            <button class="btn btn-outline btn-sm" onclick="showToast('Generando PDF...','warn')"><i class="ti ti-file-type-pdf" aria-hidden="true"></i>PDF</button>
+            <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i>CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="exportPDF()"><i class="ti ti-file-type-pdf" aria-hidden="true"></i>PDF</button>
           </div>
           <div class="stats s3" id="report-stats"><div class="loading"><div class="spinner"></div>Cargando reporte...</div></div>
           <div class="r2" id="report-body"></div>
@@ -735,24 +735,19 @@ async function apiPost(path, body={}) {
 
     <div class="sala-body">
       <div class="sala-stats">
-        <div class="sala-stat"><div class="sala-stat-val red" id="sv-busy">2</div><div class="sala-stat-label">En atención</div></div>
-        <div class="sala-stat"><div class="sala-stat-val hi" id="sv-queue">4</div><div class="sala-stat-label">En espera</div></div>
-        <div class="sala-stat"><div class="sala-stat-val green" id="sv-free">1</div><div class="sala-stat-label">Disponible</div></div>
+        <div class="sala-stat"><div class="sala-stat-val red" id="sv-busy">—</div><div class="sala-stat-label">En atención</div></div>
+        <div class="sala-stat"><div class="sala-stat-val hi" id="sv-queue">—</div><div class="sala-stat-label">En espera</div></div>
+        <div class="sala-stat"><div class="sala-stat-val green" id="sv-free">—</div><div class="sala-stat-label">Disponible</div></div>
       </div>
 
       <div class="sec-hdr"><div class="sec-title">Estado de sillas</div></div>
       <div class="sala-chairs" id="sala-chairs">
-        <div class="sala-chair busy"><i class="ti ti-scissors" aria-hidden="true"></i><div class="sala-chair-name">Carlos R.</div><div class="sala-chair-st">Ocupado · ~18 min</div></div>
-        <div class="sala-chair busy"><i class="ti ti-scissors" aria-hidden="true"></i><div class="sala-chair-name">Andrés M.</div><div class="sala-chair-st">Ocupado · ~8 min</div></div>
-        <div class="sala-chair free"><i class="ti ti-scissors" aria-hidden="true"></i><div class="sala-chair-name">Luisa V.</div><div class="sala-chair-st">Disponible ahora</div></div>
+        <div class="loading"><div class="spinner"></div>Cargando equipo...</div>
       </div>
 
       <div class="sec-hdr"><div class="sec-title">Cola actual</div></div>
       <div class="sala-q-card" id="sala-queue">
-        <div class="sala-q-row"><div class="sala-q-num">1</div><div style="flex:1"><div class="sala-q-name">Roberto Díaz</div><div class="sala-q-svc"><span class="chip chip-amber" style="font-size:9px">SIN CITA</span> Corte clásico</div></div><div class="sala-q-wait">~0 min</div></div>
-        <div class="sala-q-row"><div class="sala-q-num">2</div><div style="flex:1"><div class="sala-q-name">Luis Fernández</div><div class="sala-q-svc"><span class="chip chip-cyan" style="font-size:9px">CITA 3PM</span> Barba completa</div></div><div class="sala-q-wait">~25 min</div></div>
-        <div class="sala-q-row"><div class="sala-q-num">3</div><div style="flex:1"><div class="sala-q-name">Pedro Marte</div><div class="sala-q-svc"><span class="chip chip-amber" style="font-size:9px">SIN CITA</span> Degradado</div></div><div class="sala-q-wait">~40 min</div></div>
-        <div class="sala-q-row"><div class="sala-q-num">4</div><div style="flex:1"><div class="sala-q-name">Alex Núñez</div><div class="sala-q-svc"><span class="chip chip-cyan" style="font-size:9px">CITA 3:30</span> Corte clásico</div></div><div class="sala-q-wait">~55 min</div></div>
+        <div class="loading"><div class="spinner"></div>Cargando cola...</div>
       </div>
 
       <div id="sv-pos-card" class="pos-card">
@@ -821,51 +816,50 @@ async function apiPost(path, body={}) {
 <!-- ══ MODALS ══ -->
 <div class="modal-bg" id="modal-add-staff">
   <div class="modal">
-    <div class="modal-title">Agregar empleado <button class="modal-x" onclick="closeModal('modal-add-staff')"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="modal-title">Agregar empleado <button class="modal-x" onclick="closeModal(&quot;modal-add-staff&quot;)"><i class="ti ti-x" aria-hidden="true"></i></button></div>
     <div class="field"><label class="label">Nombre completo</label><input class="input" id="m-staff-name" placeholder="Diego Martínez" style="background:var(--bg3)"/></div>
     <div class="field"><label class="label">Especialidad</label><input class="input" id="m-staff-spec" placeholder="Degradados, barbas" style="background:var(--bg3)"/></div>
     <div id="m-staff-err" class="err-msg"></div>
-    <div style="
-          style="display:flex;gap:10px;margin-top:10px">
-              <input class="input" id="nsn" placeholder="Servicio" style="background:var(--bg3)"/>
-              <input class="input" id="nsd" placeholder="min" style="background:var(--bg3)"/>
-              <input class="input" id="nsp" placeholder="RD$" style="background:var(--bg3)"/>
-              <button class="btn btn-primary btn-sm" onclick="addSvcItem()"><i class="ti ti-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-      </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal(&quot;modal-add-staff&quot;)">
+        <i class="ti ti-x" aria-hidden="true"></i>Cancelar
+      </button>
+      <button class="btn btn-primary" style="flex:1" id="m-staff-btn" onclick="saveStaff()">
+        <i class="ti ti-user-plus" aria-hidden="true"></i>Registrar empleado
+      </button>
     </div>
   </div>
 </div>
 
-<!-- SALA screen is already in file above -->
+<div class="modal-bg" id="modal-book-apt">
+  <div class="modal">
+    <div class="modal-title">Nueva cita <button class="modal-x" onclick="closeModal(&quot;modal-book-apt&quot;)"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="grid2">
+      <div class="field"><label class="label">Nombre</label><input class="input" id="ma-name" placeholder="Juan García" style="background:var(--bg3)"/></div>
+      <div class="field"><label class="label">Email</label><input class="input" id="ma-email" type="email" placeholder="juan@email.com" style="background:var(--bg3)"/></div>
+    </div>
+    <div class="field"><label class="label">Teléfono</label><input class="input" id="ma-phone" placeholder="+1 809 555 0000" style="background:var(--bg3)"/></div>
+    <div class="field"><label class="label">Servicio</label><input class="input" id="ma-svc" placeholder="Corte clásico" style="background:var(--bg3)"/></div>
+    <div class="grid2">
+      <div class="field"><label class="label">Fecha y hora</label><input class="input" type="datetime-local" id="ma-dt" style="background:var(--bg3)"/></div>
+      <div class="field"><label class="label">Precio</label><input class="input" id="ma-price" placeholder="400" type="number" style="background:var(--bg3)"/></div>
+    </div>
+    <div id="ma-err" class="err-msg"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal(&quot;modal-book-apt&quot;)">
+        <i class="ti ti-x" aria-hidden="true"></i>Cancelar
+      </button>
+      <button class="btn btn-primary" style="flex:1" id="ma-btn" onclick="saveAppointment()">
+        <i class="ti ti-calendar-check" aria-hidden="true"></i>Confirmar cita
+      </button>
+    </div>
+  </div>
+</div>
 
-<!-- MODALS are already in file above -->
-
-<!-- TOAST is already in file above -->
-
+<div class="toast" id="toast"><i class="ti ti-check" aria-hidden="true"></i><span id="toast-msg"></span></div>
 <script>
-// Event delegation for staff buttons (avoids inline onclick quote issues)
-document.addEventListener('click', function(e){
-  const btn = e.target.closest('[data-action]');
-  if(!btn) return;
-  const action = btn.getAttribute('data-action');
-  const id     = btn.getAttribute('data-id');
-  const name   = btn.getAttribute('data-name') || '';
-  if(action==='callnext') callNextForStaff(id, name);
-  if(action==='finish')   finishForStaff(id, name);
-  if(action==='dayoff')   markOff(id);
-  if(action==='remove')   removeStaff(id);
-  if(action==='delsvc') btn.closest('.svc-item') && btn.closest('.svc-item').remove();
-});
-
-
-// ── DEMO DATA ──────────────────────────────────────────────────────
-const DEMO = {
-  business_id:'demo-001', name:'Barbería El Maestro',
-  slug:'barberia-el-maestro', plan:'free_trial', lang:'es',
+const DEMO={
+  business_id:'demo-001',name:'Barbería El Maestro',slug:'barberia-el-maestro',plan:'free_trial',lang:'es',
   staff:[
     {id:'s1',name:'Carlos R.',specialty:'Degradados',status:'busy',avatar_initials:'CR',color_index:0},
     {id:'s2',name:'Andrés M.',specialty:'Barbas clásicas',status:'busy',avatar_initials:'AM',color_index:1},
@@ -875,595 +869,462 @@ const DEMO = {
     {id:'q1',Name:'Roberto Díaz',service_name:'Corte clásico',position:1,status:'waiting',type:'walk_in'},
     {id:'q2',Name:'Luis Fernández',service_name:'Barba completa',position:2,status:'waiting',type:'appointment'},
     {id:'q3',Name:'Pedro Marte',service_name:'Degradado',position:3,status:'waiting',type:'walk_in'},
-    {id:'q4',Name:'Alex Núñez',service_name:'Corte clásico',position:4,status:'waiting',type:'appointment'},
   ],
   report:{total_served:11,total_amount:4550,
     by_staff:{'Carlos R.':{count:4,total:2100},'Andrés M.':{count:4,total:1750},'Luisa V.':{count:3,total:700}},
     by_service:{'Corte clásico':{count:6,total:2400},'Corte + barba':{count:3,total:1500},'Barba completa':{count:2,total:650}}
   }
 };
-let addedStaff = 0;
+let addedStaff=0;
+window._lastReport=null;
 
-// ── SCREEN / NAV ───────────────────────────────────────────────────
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-function adminGoto(page, el){
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function adminGoto(page,el){
   document.querySelectorAll('#s-admin .page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('p-'+page).classList.add('active');
-  if(el) el.classList.add('active');
-  const titles={dashboard:'Dashboard',staff:'Equipo',queue:'Cola en tiempo real',
-    appointments:'Citas agendadas',report:'Reporte del día',settings:'Configuración'};
-  document.getElementById('admin-title').textContent = titles[page]||page;
-  if(page==='report') loadReport();
-  if(page==='appointments') loadAppointments();
-  if(page==='staff') loadStaff();
-  if(page==='queue') loadQueuePage();
+  if(el)el.classList.add('active');
+  const titles={dashboard:'Dashboard',staff:'Equipo',queue:'Cola en tiempo real',appointments:'Citas agendadas',report:'Reporte del día',settings:'Configuración'};
+  document.getElementById('admin-title').textContent=titles[page]||page;
+  if(page==='report')loadReport();
+  if(page==='appointments')loadAppointments();
+  if(page==='staff')loadStaff();
+  if(page==='queue')loadQueuePage();
 }
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function toggleForm(show,hide){document.getElementById(hide).classList.remove('open');document.getElementById(show).classList.toggle('open');document.getElementById('sv-pos-card').style.display='none';}
+function closeForm(id){document.getElementById(id).classList.remove('open');}
+function pickTs(el){document.querySelectorAll('.ts:not(.taken)').forEach(t=>t.classList.remove('selected'));el.classList.add('selected');}
 
-// ── MODALS / FORMS ─────────────────────────────────────────────────
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-function toggleForm(show, hide){
-  document.getElementById(hide).classList.remove('open');
-  document.getElementById(show).classList.toggle('open');
-  document.getElementById('sv-pos-card').style.display='none';
-}
-function closeForm(id){ document.getElementById(id).classList.remove('open'); }
-function pickTs(el){
-  document.querySelectorAll('.ts:not(.taken)').forEach(t=>t.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-// ── TOAST ──────────────────────────────────────────────────────────
 let toastTmr;
-function showToast(msg, type='success'){
-  const t = document.getElementById('toast');
-  const icons = {success:'ti-circle-check', error:'ti-circle-x', warn:'ti-alert-triangle'};
-  t.querySelector('i').className = 'ti '+(icons[type]||'ti-circle-check');
-  document.getElementById('toast-msg').textContent = msg;
-  t.className = 'toast '+type+' show';
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  const icons={success:'ti-circle-check',error:'ti-circle-x',warn:'ti-alert-triangle'};
+  t.querySelector('i').className='ti '+(icons[type]||'ti-circle-check');
+  document.getElementById('toast-msg').textContent=msg;
+  t.className='toast '+type+' show';
   clearTimeout(toastTmr);
-  toastTmr = setTimeout(()=>t.classList.remove('show'), 3500);
+  toastTmr=setTimeout(()=>t.classList.remove('show'),3500);
 }
+function setLoading(id,msg='Cargando...'){const el=document.getElementById(id);if(el)el.innerHTML='<div class="loading"><div class="spinner"></div>'+msg+'</div>';}
+function updateClock(){const d=new Date(),h=d.getHours(),m=d.getMinutes();const t=(h%12||12)+':'+(m<10?'0':'')+m+(h>=12?' PM':' AM');const el=document.getElementById('sala-clock');if(el)el.textContent=t;}
+updateClock();setInterval(updateClock,30000);
+function copySlug(){const v=document.getElementById('cfg-slug').value;navigator.clipboard&&navigator.clipboard.writeText(v);showToast('Link copiado ✓');}
 
-// ── LOADING ────────────────────────────────────────────────────────
-function setLoading(id, msg='Cargando...'){
-  const el = document.getElementById(id);
-  if(el) el.innerHTML = '<div class="loading"><div class="spinner"></div>'+msg+'</div>';
-}
-
-// ── CLOCK ──────────────────────────────────────────────────────────
-function updateClock(){
-  const d=new Date(), h=d.getHours(), m=d.getMinutes();
-  const t = (h%12||12)+':'+(m<10?'0':'')+m+(h>=12?' PM':' AM');
-  const el = document.getElementById('sala-clock');
-  if(el) el.textContent = t;
-}
-updateClock();
-setInterval(updateClock, 30000);
-
-// ── COPY SLUG ─────────────────────────────────────────────────────
-function copySlug(){
-  const v = document.getElementById('cfg-slug').value;
-  navigator.clipboard && navigator.clipboard.writeText(v);
-  showToast('Link copiado ✓');
-}
-
-// ── AUTH ───────────────────────────────────────────────────────────
 function enterDemo(){
-  IS_DEMO = true;
-  SESSION = Object.assign({}, DEMO);
-  document.getElementById('sb-av').textContent = 'B';
-  document.getElementById('sb-biz-name').textContent = DEMO.name;
-  document.getElementById('sb-plan-label').textContent = 'Free Trial · 28 días';
-  document.getElementById('cfg-slug').value = 'elturno.app/sala/'+DEMO.slug;
-  showScreen('s-admin');
-  loadDashboard();
+  IS_DEMO=true;SESSION=Object.assign({},DEMO);
+  document.getElementById('sb-av').textContent='B';
+  document.getElementById('sb-biz-name').textContent=DEMO.name;
+  document.getElementById('sb-plan-label').textContent='Free Trial · 28 días';
+  document.getElementById('cfg-slug').value='elturno.app/sala/'+DEMO.slug;
+  showScreen('s-admin');loadDashboard();
 }
-
 async function doLogin(){
-  const email = document.getElementById('l-email').value.trim();
-  const slug  = document.getElementById('l-slug').value.trim().toLowerCase();
-  const err   = document.getElementById('l-err');
-  const btn   = document.getElementById('l-btn');
-  if(!email||!slug){ err.textContent='Completa todos los campos.'; err.style.display='block'; return; }
-  err.style.display='none';
-  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>Verificando...';
+  const email=document.getElementById('l-email').value.trim();
+  const slug=document.getElementById('l-slug').value.trim().toLowerCase();
+  const err=document.getElementById('l-err');const btn=document.getElementById('l-btn');
+  if(!email||!slug){err.textContent='Completa todos los campos.';err.style.display='block';return;}
+  err.style.display='none';btn.disabled=true;btn.innerHTML='<div class="spinner"></div>Verificando...';
   try{
-    const res = await apiPost('login',{email,slug});
-    if(!res.ok){
-      err.textContent = res.error||'Credenciales incorrectas.';
-      err.style.display='block';
-      btn.disabled=false; btn.innerHTML='<i class="ti ti-login"></i>Entrar al panel';
-      return;
-    }
-    IS_DEMO = false; SESSION = Object.assign({}, res.data);
-    document.getElementById('sb-av').textContent = (SESSION.name||slug)[0].toUpperCase();
-    document.getElementById('sb-biz-name').textContent = SESSION.name||slug;
-    document.getElementById('sb-plan-label').textContent = SESSION.plan==='pro'?'Pro ✦':'Free Trial';
-    document.getElementById('cfg-slug').value = 'elturno.app/sala/'+slug;
-    showScreen('s-admin');
-    loadDashboard();
-  }catch(e){
-    err.textContent='Error de conexión. Intenta de nuevo.';
-    err.style.display='block';
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-login"></i>Entrar al panel';
-  }
+    const res=await apiPost('login',{email,slug});
+    if(!res.ok){err.textContent=res.error||'Credenciales incorrectas.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>Entrar al panel';return;}
+    IS_DEMO=false;SESSION=Object.assign({},res.data);
+    document.getElementById('sb-av').textContent=(SESSION.name||slug)[0].toUpperCase();
+    document.getElementById('sb-biz-name').textContent=SESSION.name||slug;
+    document.getElementById('sb-plan-label').textContent=SESSION.plan==='pro'?'Pro ✦':'Free Trial';
+    document.getElementById('cfg-slug').value='elturno.app?sala='+slug;
+    showScreen('s-admin');loadDashboard();
+  }catch(e){err.textContent='Error de conexión.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-login"></i>Entrar al panel';}
 }
-
 async function doRegister(){
-  const name  = document.getElementById('r-name').value.trim();
-  const email = document.getElementById('r-email').value.trim();
-  const owner = document.getElementById('r-owner').value.trim();
-  const slug  = document.getElementById('r-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-');
-  const phone = document.getElementById('r-phone').value.trim();
-  const cat   = document.getElementById('r-cat').value;
-  const lang  = document.getElementById('r-lang').value;
-  const err   = document.getElementById('r-err');
-  const btn   = document.getElementById('r-btn');
-  if(!name||!email||!slug){ err.textContent='Nombre, email y slug son requeridos.'; err.style.display='block'; return; }
-  if(slug.length<3){ err.textContent='Slug mínimo 3 caracteres.'; err.style.display='block'; return; }
-  err.style.display='none';
-  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>Creando negocio...';
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const owner=document.getElementById('r-owner').value.trim();
+  const slug=document.getElementById('r-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-');
+  const phone=document.getElementById('r-phone').value.trim();
+  const cat=document.getElementById('r-cat').value;
+  const lang=document.getElementById('r-lang').value;
+  const err=document.getElementById('r-err');const btn=document.getElementById('r-btn');
+  if(!name||!email||!slug){err.textContent='Nombre, email y slug son requeridos.';err.style.display='block';return;}
+  if(slug.length<3){err.textContent='Slug mínimo 3 caracteres.';err.style.display='block';return;}
+  err.style.display='none';btn.disabled=true;btn.innerHTML='<div class="spinner"></div>Creando negocio...';
   try{
-    const res = await apiPost('register-business',{name,owner_email:email,owner_name:owner,slug,phone,category:cat,lang,open_time:'09:00',close_time:'20:00'});
-    if(!res.ok){
-      err.textContent = res.error||'Error al registrar.';
-      err.style.display='block';
-      btn.disabled=false; btn.innerHTML='<i class="ti ti-rocket"></i>Crear negocio gratis — 30 días';
-      return;
-    }
-    IS_DEMO=false; SESSION={business_id:res.data.business_id,name,slug,plan:'free_trial',lang};
-    document.getElementById('sb-av').textContent = name[0].toUpperCase();
-    document.getElementById('sb-biz-name').textContent = name;
-    document.getElementById('sb-plan-label').textContent = 'Free Trial · 30 días';
-    document.getElementById('cfg-slug').value = 'elturno.app/sala/'+slug;
-    showScreen('s-admin');
-    showToast('¡Negocio creado! Revisa tu correo 🎉','success');
-    loadDashboard();
-  }catch(e){
-    err.textContent='Error de conexión.';
-    err.style.display='block';
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-rocket"></i>Crear negocio gratis — 30 días';
-  }
+    const res=await apiPost('register-business',{name,owner_email:email,owner_name:owner,slug,phone,category:cat,lang,open_time:'09:00',close_time:'20:00'});
+    if(!res.ok){err.textContent=res.error||'Error al registrar.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-rocket"></i>Crear negocio gratis — 30 días';return;}
+    IS_DEMO=false;SESSION={business_id:res.data.business_id,name,slug,plan:'free_trial',lang};
+    document.getElementById('sb-av').textContent=name[0].toUpperCase();
+    document.getElementById('sb-biz-name').textContent=name;
+    document.getElementById('sb-plan-label').textContent='Free Trial · 30 días';
+    document.getElementById('cfg-slug').value='elturno.app?sala='+slug;
+    showScreen('s-admin');showToast('¡Negocio creado! Revisa tu correo 🎉','success');loadDashboard();
+  }catch(e){err.textContent='Error de conexión.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-rocket"></i>Crear negocio gratis — 30 días';}
 }
+function doLogout(){SESSION={};IS_DEMO=false;document.getElementById('l-email').value='';document.getElementById('l-slug').value='';document.getElementById('l-err').style.display='none';showScreen('s-login');showToast('Sesión cerrada','warn');}
 
-function doLogout(){
-  SESSION={}; IS_DEMO=false;
-  document.getElementById('l-email').value='';
-  document.getElementById('l-slug').value='';
-  document.getElementById('l-err').style.display='none';
-  showScreen('s-login');
-  showToast('Sesión cerrada','warn');
-}
-
-// ── AVATAR COLORS ─────────────────────────────────────────────────
-const avCols = [
-  {bg:'rgba(124,92,252,.2)', color:'var(--hi2)',   border:'rgba(124,92,252,.3)'},
-  {bg:'rgba(0,229,160,.15)', color:'var(--green)',  border:'rgba(0,229,160,.25)'},
-  {bg:'rgba(255,71,87,.15)', color:'var(--red)',    border:'rgba(255,71,87,.25)'},
-  {bg:'rgba(0,212,255,.12)', color:'var(--cyan)',   border:'rgba(0,212,255,.25)'},
+const avCols=[
+  {bg:'rgba(124,92,252,.2)',color:'var(--hi2)',border:'rgba(124,92,252,.3)'},
+  {bg:'rgba(0,229,160,.15)',color:'var(--green)',border:'rgba(0,229,160,.25)'},
+  {bg:'rgba(255,71,87,.15)',color:'var(--red)',border:'rgba(255,71,87,.25)'},
+  {bg:'rgba(0,212,255,.12)',color:'var(--cyan)',border:'rgba(0,212,255,.25)'},
 ];
 
-// ── DASHBOARD ─────────────────────────────────────────────────────
 async function loadDashboard(){
   if(IS_DEMO){
-    renderStaff(DEMO.staff,'dash-staff',true);
-    renderQueue(DEMO.queue,'dash-q',true);
-    document.getElementById('d-busy').textContent    = DEMO.staff.filter(s=>s.status==='busy').length;
-    document.getElementById('d-queue').textContent   = DEMO.queue.filter(q=>q.status==='waiting').length;
-    document.getElementById('d-done').textContent    = DEMO.report.total_served;
-    document.getElementById('d-income').textContent  = 'RD$'+DEMO.report.total_amount.toLocaleString();
-    document.getElementById('q-badge').textContent   = DEMO.queue.filter(q=>q.status==='waiting').length;
+    renderStaff(DEMO.staff,'dash-staff',true);renderQueue(DEMO.queue,'dash-q',true);
+    document.getElementById('d-busy').textContent=DEMO.staff.filter(s=>s.status==='busy').length;
+    document.getElementById('d-queue').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
+    document.getElementById('d-done').textContent=DEMO.report.total_served;
+    document.getElementById('d-income').textContent='RD$'+DEMO.report.total_amount.toLocaleString();
+    document.getElementById('q-badge').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
     return;
   }
   try{
-    const [sr,qr,rr] = await Promise.all([
-      apiGet('staff',  {business_id:SESSION.business_id}),
-      apiGet('queue',  {business_id:SESSION.business_id}),
-      apiGet('report', {business_id:SESSION.business_id}),
-    ]);
-    const staff  = sr.ok ? sr.data : [];
-    const queue  = qr.ok ? qr.data : [];
-    const report = rr.ok ? rr.data : {total_served:0,total_amount:0};
-    renderStaff(staff,'dash-staff',true);
-    renderQueue(queue,'dash-q',true);
-    document.getElementById('d-busy').textContent   = staff.filter(s=>s.status==='busy').length;
-    document.getElementById('d-queue').textContent  = queue.filter(q=>q.status==='waiting').length;
-    document.getElementById('d-done').textContent   = report.total_served||0;
-    document.getElementById('d-income').textContent = 'RD$'+(report.total_amount||0).toLocaleString();
-    document.getElementById('q-badge').textContent  = queue.filter(q=>q.status==='waiting').length;
-  }catch(e){ showToast('Error cargando dashboard','error'); }
+    const [sr,qr,rr]=await Promise.all([apiGet('staff',{business_id:SESSION.business_id}),apiGet('queue',{business_id:SESSION.business_id}),apiGet('report',{business_id:SESSION.business_id})]);
+    const staff=sr.ok?sr.data:[];const queue=qr.ok?qr.data:[];const report=rr.ok?rr.data:{total_served:0,total_amount:0};
+    renderStaff(staff,'dash-staff',true);renderQueue(queue,'dash-q',true);
+    document.getElementById('d-busy').textContent=staff.filter(s=>s.status==='busy').length;
+    document.getElementById('d-queue').textContent=queue.filter(q=>q.status==='waiting').length;
+    document.getElementById('d-done').textContent=report.total_served||0;
+    document.getElementById('d-income').textContent='RD$'+(report.total_amount||0).toLocaleString();
+    document.getElementById('q-badge').textContent=queue.filter(q=>q.status==='waiting').length;
+  }catch(e){showToast('Error cargando dashboard','error');}
 }
 
-// ── STAFF ─────────────────────────────────────────────────────────
 async function loadStaff(){
-  if(IS_DEMO){
-    renderStaff(DEMO.staff,'full-staff',false);
-    document.getElementById('s-total').textContent = DEMO.staff.length;
-    document.getElementById('s-busy').textContent  = DEMO.staff.filter(s=>s.status==='busy').length;
-    document.getElementById('s-free').textContent  = DEMO.staff.filter(s=>s.status==='available').length;
-    return;
-  }
+  if(IS_DEMO){renderStaff(DEMO.staff,'full-staff',false);document.getElementById('s-total').textContent=DEMO.staff.length;document.getElementById('s-busy').textContent=DEMO.staff.filter(s=>s.status==='busy').length;document.getElementById('s-free').textContent=DEMO.staff.filter(s=>s.status==='available').length;return;}
   setLoading('full-staff');
   try{
-    const res = await apiGet('staff',{business_id:SESSION.business_id});
-    const staff = res.ok ? res.data : [];
+    const res=await apiGet('staff',{business_id:SESSION.business_id});
+    const staff=res.ok?res.data:[];
     renderStaff(staff,'full-staff',false);
-    document.getElementById('s-total').textContent = staff.length;
-    document.getElementById('s-busy').textContent  = staff.filter(s=>s.status==='busy').length;
-    document.getElementById('s-free').textContent  = staff.filter(s=>s.status==='available').length;
-  }catch(e){ showToast('Error cargando equipo','error'); }
+    document.getElementById('s-total').textContent=staff.length;
+    document.getElementById('s-busy').textContent=staff.filter(s=>s.status==='busy').length;
+    document.getElementById('s-free').textContent=staff.filter(s=>s.status==='available').length;
+  }catch(e){showToast('Error cargando equipo','error');}
 }
 
-function renderStaff(staff, containerId, isDash){
-  const el = document.getElementById(containerId);
-  if(!el) return;
+function renderStaff(staff,containerId,isDash){
+  const el=document.getElementById(containerId);if(!el)return;
   if(!staff.length){
-    el.innerHTML = '<div class="q-empty"><i class="ti ti-users"></i><p>Sin empleados registrados</p></div>'
-      + (!isDash ? '<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar primer empleado</span></div>' : '');
+    el.innerHTML='<div class="q-empty"><i class="ti ti-users"></i><p>Sin empleados registrados</p></div>'
+      +(!isDash?'<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar primer empleado</span></div>':'');
     return;
   }
-  const waitingQ = IS_DEMO ? DEMO.queue.filter(function(q){return q.status==='waiting';}) : [];
-  let html = staff.map(function(s){
-    const ci  = (s.color_index||0) % 4;
-    const av  = avCols[ci];
-    const sc  = s.status==='busy' ? 'busy' : s.status==='day_off' ? 'day_off' : 'free';
-    const sl  = s.status==='busy' ? 'Ocupado' : s.status==='day_off' ? 'Dia libre' : 'Disponible';
-    const dotColor = sc==='busy' ? 'var(--red)' : sc==='free' ? 'var(--green)' : 'var(--text4)';
-    const clientBox = s.status==='busy'
-      ? '<div class="bc-cname">Atendiendo cliente</div><div class="bc-csvc">En servicio</div>'
-      : '<div style="text-align:center;color:var(--text4);font-size:11px;padding:6px 0">'+(s.status==='day_off'?'Dia libre':'Sin cliente activo')+'</div>';
-    const actionBtn = s.status==='available' && waitingQ.length>0
-      ? '<button class="bc-btn primary" data-action="callnext" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-user-plus"></i>Llamar sig.</button>'
-      : s.status==='busy'
-      ? '<button class="bc-btn green" data-action="finish" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-check"></i>Terminado</button>'
-      : '<button class="bc-btn" disabled style="opacity:.3;font-size:11px">Sin cola</button>';
-    const extraBtns = isDash ? ''
-      : '<button class="bc-btn danger" data-action="dayoff" data-id="'+s.id+'" style="max-width:80px;font-size:10px"><i class="ti ti-moon"></i>Libre</button>'
-        + '<button class="bc-btn" data-action="remove" data-id="'+s.id+'" style="max-width:32px"><i class="ti ti-trash"></i></button>';
-    return '<div class="bc '+sc+'" id="bc-'+s.id+'">'
-      + '<div class="bc-head">'
-      + '<div class="bc-av" style="background:'+av.bg+';color:'+av.color+';border:1px solid '+av.border+'">'+(s.avatar_initials||s.name[0])+'</div>'
-      + '<div style="flex:1"><div class="bc-name">'+s.name+'</div><div class="bc-spec">'+(s.specialty||'Estilista')+'</div></div>'
-      + '<div class="status-dot-wrap" style="color:'+dotColor+'"><span class="sdot '+sc+'"></span><span style="font-size:10px">'+sl+'</span></div>'
-      + '</div>'
-      + '<div class="bc-client">'+clientBox+'</div>'
-      + '<div class="bc-actions">'+actionBtn+extraBtns+'</div>'
-      + '</div>';
+  const waitingQ=IS_DEMO?DEMO.queue.filter(q=>q.status==='waiting'):[];
+  let html=staff.map(function(s){
+    const ci=(s.color_index||0)%4;const av=avCols[ci];
+    const sc=s.status==='busy'?'busy':s.status==='day_off'?'day_off':'free';
+    const sl=s.status==='busy'?'Ocupado':s.status==='day_off'?'Dia libre':'Disponible';
+    const dotColor=sc==='busy'?'var(--red)':sc==='free'?'var(--green)':'var(--text4)';
+    const clientBox=s.status==='busy'?'<div class="bc-cname">Atendiendo cliente</div><div class="bc-csvc">En servicio</div>':'<div style="text-align:center;color:var(--text4);font-size:11px;padding:6px 0">'+(s.status==='day_off'?'Dia libre':'Sin cliente activo')+'</div>';
+    const actionBtn=s.status==='available'&&waitingQ.length>0
+      ?'<button class="bc-btn primary" data-action="callnext" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-user-plus"></i>Llamar sig.</button>'
+      :s.status==='busy'
+      ?'<button class="bc-btn green" data-action="finish" data-id="'+s.id+'" data-name="'+s.name+'"><i class="ti ti-check"></i>Terminado</button>'
+      :'<button class="bc-btn" disabled style="opacity:.3;font-size:11px">Sin cola</button>';
+    const extraBtns=isDash?'':'<button class="bc-btn danger" data-action="dayoff" data-id="'+s.id+'" style="max-width:80px;font-size:10px"><i class="ti ti-moon"></i>Libre</button><button class="bc-btn" data-action="remove" data-id="'+s.id+'" style="max-width:32px"><i class="ti ti-trash"></i></button>';
+    return '<div class="bc '+sc+'" id="bc-'+s.id+'"><div class="bc-head"><div class="bc-av" style="background:'+av.bg+';color:'+av.color+';border:1px solid '+av.border+'">'+(s.avatar_initials||s.name[0])+'</div><div style="flex:1"><div class="bc-name">'+s.name+'</div><div class="bc-spec">'+(s.specialty||'Estilista')+'</div></div><div class="status-dot-wrap" style="color:'+dotColor+'"><span class="sdot '+sc+'"></span><span style="font-size:10px">'+sl+'</span></div></div><div class="bc-client">'+clientBox+'</div><div class="bc-actions">'+actionBtn+extraBtns+'</div></div>';
   }).join('');
-  if(!isDash) html += '<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar empleado</span></div>';
-  el.innerHTML = html;
+  if(!isDash)html+='<div class="add-staff-card" onclick="openModal(&quot;modal-add-staff&quot;)"><i class="ti ti-user-plus"></i><span>Agregar empleado</span></div>';
+  el.innerHTML=html;
 }
 
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('[data-action]');if(!btn)return;
+  const action=btn.getAttribute('data-action');
+  const id=btn.getAttribute('data-id');
+  const name=btn.getAttribute('data-name')||'';
+  if(action==='callnext')callNextForStaff(id,name);
+  if(action==='finish')finishForStaff(id,name);
+  if(action==='dayoff')markOff(id);
+  if(action==='remove')removeStaff(id);
+  if(action==='delsvc'){const item=btn.closest('.svc-item');if(item)item.remove();}
+});
 
 async function saveStaff(){
-  const name = document.getElementById('m-staff-name').value.trim();
-  const spec = document.getElementById('m-staff-spec').value.trim();
-  const err  = document.getElementById('m-staff-err');
-  const btn  = document.getElementById('m-staff-btn');
-  if(!name){ err.textContent='El nombre es requerido.'; err.style.display='block'; return; }
-  err.style.display='none';
-  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>';
+  const name=document.getElementById('m-staff-name').value.trim();
+  const spec=document.getElementById('m-staff-spec').value.trim();
+  const err=document.getElementById('m-staff-err');const btn=document.getElementById('m-staff-btn');
+  if(!name){err.textContent='El nombre es requerido.';err.style.display='block';return;}
+  err.style.display='none';btn.disabled=true;btn.innerHTML='<div class="spinner"></div>';
   if(IS_DEMO){
-    const ini = name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
-    const ci  = addedStaff % 4; addedStaff++;
+    const ini=name.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    const ci=addedStaff%4;addedStaff++;
     DEMO.staff.push({id:'s'+Date.now(),name,specialty:spec,status:'available',avatar_initials:ini,color_index:ci});
-    renderStaff(DEMO.staff,'dash-staff',true);
-    renderStaff(DEMO.staff,'full-staff',false);
-    closeModal('modal-add-staff');
-    showToast(name+' agregado ✓');
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i>Agregar';
-    document.getElementById('m-staff-name').value='';
-    document.getElementById('m-staff-spec').value='';
+    renderStaff(DEMO.staff,'dash-staff',true);renderStaff(DEMO.staff,'full-staff',false);
+    closeModal('modal-add-staff');showToast(name+' agregado ✓');
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i>Registrar empleado';
+    document.getElementById('m-staff-name').value='';document.getElementById('m-staff-spec').value='';
     return;
   }
   try{
-    const res = await apiPost('staff/add',{business_id:SESSION.business_id,business_name:SESSION.name,name,specialty:spec});
-    if(!res.ok){ err.textContent=res.error||'Error.'; err.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i>Agregar'; return; }
-    closeModal('modal-add-staff');
-    showToast(name+' agregado ✓');
-    loadStaff(); loadDashboard();
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i>Agregar';
-    document.getElementById('m-staff-name').value='';
-    document.getElementById('m-staff-spec').value='';
-  }catch(e){ err.textContent='Error de conexión.'; err.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i>Agregar'; }
+    const res=await apiPost('staff/add',{business_id:SESSION.business_id,business_name:SESSION.name,name,specialty:spec});
+    if(!res.ok){err.textContent=res.error||'Error.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i>Registrar empleado';return;}
+    closeModal('modal-add-staff');showToast(name+' agregado ✓');loadStaff();loadDashboard();
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i>Registrar empleado';
+    document.getElementById('m-staff-name').value='';document.getElementById('m-staff-spec').value='';
+  }catch(e){err.textContent='Error de conexión.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-user-plus"></i>Registrar empleado';}
 }
+async function markOff(id){if(IS_DEMO){const s=DEMO.staff.find(x=>x.id===id);if(s)s.status='day_off';renderStaff(DEMO.staff,'full-staff',false);showToast('Día libre marcado','warn');return;}await apiPost('staff/status',{staff_id:id,status:'day_off'});showToast('Día libre marcado','warn');loadStaff();}
+async function removeStaff(id){if(IS_DEMO){DEMO.staff=DEMO.staff.filter(s=>s.id!==id);renderStaff(DEMO.staff,'full-staff',false);showToast('Empleado eliminado','warn');return;}await apiPost('staff/remove',{staff_id:id});showToast('Empleado eliminado','warn');loadStaff();}
 
-async function markOff(id){
-  if(IS_DEMO){
-    const s = DEMO.staff.find(function(x){return x.id===id;});
-    if(s) s.status='day_off';
-    renderStaff(DEMO.staff,'full-staff',false);
-    showToast('Día libre marcado','warn'); return;
-  }
-  await apiPost('staff/status',{staff_id:id,status:'day_off'});
-  showToast('Día libre marcado','warn'); loadStaff();
-}
-
-async function removeStaff(id){
-  if(IS_DEMO){
-    DEMO.staff = DEMO.staff.filter(function(s){return s.id!==id;});
-    renderStaff(DEMO.staff,'full-staff',false);
-    showToast('Empleado eliminado','warn'); return;
-  }
-  await apiPost('staff/remove',{staff_id:id});
-  showToast('Empleado eliminado','warn'); loadStaff();
-}
-
-// ── QUEUE ─────────────────────────────────────────────────────────
 async function loadQueuePage(){
-  if(IS_DEMO){
-    renderQueue(DEMO.queue,'queue-rows',false);
-    document.getElementById('q-count-chip').textContent = DEMO.queue.filter(function(q){return q.status==='waiting';}).length+' personas';
-    return;
-  }
+  if(IS_DEMO){renderQueue(DEMO.queue,'queue-rows',false);document.getElementById('q-count-chip').textContent=DEMO.queue.filter(q=>q.status==='waiting').length+' personas';return;}
   setLoading('queue-rows');
+  try{const res=await apiGet('queue',{business_id:SESSION.business_id});const queue=res.ok?res.data:[];renderQueue(queue,'queue-rows',false);document.getElementById('q-count-chip').textContent=queue.length+' personas';}catch(e){showToast('Error cargando cola','error');}
+}
+function renderQueue(queue,containerId,isDash){
+  const el=document.getElementById(containerId);if(!el)return;
+  const waiting=queue.filter(q=>q.status==='waiting'||q.status==='called');
+  if(!waiting.length){el.innerHTML='<div class="q-empty"><i class="ti ti-mood-smile"></i><p>Cola vacía</p></div>';return;}
+  el.innerHTML=waiting.map(function(q,i){
+    const pos=q.position||i+1;const wait=(pos-1)*25;
+    const badge=q.type==='appointment'?'<span class="chip chip-cyan" style="font-size:9px">CITA</span>':'<span class="chip chip-amber" style="font-size:9px">SIN CITA</span>';
+    return '<div class="q-row"><div class="q-num">'+pos+'</div><div class="q-info"><div class="q-name">'+(q.Name||q.name||'Cliente')+'</div><div class="q-meta">'+badge+(q.service_name||'')+'</div></div><div class="q-wait">~'+wait+' min</div></div>';
+  }).join('');
+}
+async function addToQueue(){
+  const name=document.getElementById('qn').value.trim();const svc=document.getElementById('qs').value;
+  if(!name){showToast('Ingresa el nombre','warn');return;}
+  if(IS_DEMO){
+    const pos=DEMO.queue.filter(q=>q.status==='waiting').length+1;
+    DEMO.queue.push({id:'q'+Date.now(),Name:name,service_name:svc,position:pos,status:'waiting',type:'walk_in'});
+    renderQueue(DEMO.queue,'queue-rows',false);renderQueue(DEMO.queue,'dash-q',true);
+    document.getElementById('d-queue').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
+    document.getElementById('q-badge').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
+    document.getElementById('q-count-chip').textContent=DEMO.queue.filter(q=>q.status==='waiting').length+' personas';
+    document.getElementById('qn').value='';showToast(name+' → posición #'+pos,'success');return;
+  }
   try{
-    const res = await apiGet('queue',{business_id:SESSION.business_id});
-    const queue = res.ok ? res.data : [];
-    renderQueue(queue,'queue-rows',false);
-    document.getElementById('q-count-chip').textContent = queue.length+' personas';
-  }catch(e){ showToast('Error cargando cola','error'); }
+    const res=await apiPost('queue/add',{business_id:SESSION.business_id,business_name:SESSION.name,client_name:name,service_name:svc,service_duration:25,lang:SESSION.lang||'es',type:'walk_in'});
+    if(!res.ok){showToast(res.error||'Error','error');return;}
+    document.getElementById('qn').value='';showToast(name+' → posición #'+res.data.position,'success');loadQueuePage();loadDashboard();
+  }catch(e){showToast('Error de conexión','error');}
+}
+async function callNextForStaff(staffId,staffName){
+  if(IS_DEMO){
+    const w=DEMO.queue.filter(q=>q.status==='waiting');if(!w.length){showToast('Cola vacía','warn');return;}
+    const next=w[0];next.status='called';const s=DEMO.staff.find(x=>x.id===staffId);if(s)s.status='busy';
+    DEMO.queue=DEMO.queue.filter(q=>q.id!==next.id).map((q,i)=>Object.assign({},q,{position:i+1}));
+    renderStaff(DEMO.staff,'dash-staff',true);renderQueue(DEMO.queue,'dash-q',true);
+    document.getElementById('d-busy').textContent=DEMO.staff.filter(s=>s.status==='busy').length;
+    document.getElementById('d-queue').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
+    document.getElementById('q-badge').textContent=DEMO.queue.filter(q=>q.status==='waiting').length;
+    showToast((next.Name||'Cliente')+' → silla de '+staffName,'success');return;
+  }
+  try{const res=await apiPost('queue/call-next',{business_id:SESSION.business_id,staff_id:staffId,staff_name:staffName});if(!res.ok){showToast(res.error||'Error','error');return;}showToast(res.data.called+' → llamado ✓','success');loadDashboard();loadQueuePage();}catch(e){showToast('Error de conexión','error');}
+}
+async function finishForStaff(staffId,staffName){
+  if(IS_DEMO){
+    const s=DEMO.staff.find(x=>x.id===staffId);if(s)s.status='available';
+    DEMO.report.total_served++;DEMO.report.total_amount+=400;
+    renderStaff(DEMO.staff,'dash-staff',true);renderStaff(DEMO.staff,'full-staff',false);
+    document.getElementById('d-busy').textContent=DEMO.staff.filter(s=>s.status==='busy').length;
+    document.getElementById('d-done').textContent=DEMO.report.total_served;
+    document.getElementById('d-income').textContent='RD$'+DEMO.report.total_amount.toLocaleString();
+    showToast(staffName+' → disponible ✓','success');return;
+  }
+  try{const res=await apiPost('queue/finish',{business_id:SESSION.business_id,business_name:SESSION.name,staff_id:staffId,staff_name:staffName,amount:400,service_name:'Servicio'});if(!res.ok){showToast(res.error||'Error','error');return;}showToast('Servicio terminado ✓','success');loadDashboard();}catch(e){showToast('Error de conexión','error');}
 }
 
-function renderQueue(queue, containerId, isDash){
-  const el = document.getElementById(containerId);
+async function loadAppointments(){
+  const el=document.getElementById('apts-list');if(!el)return;
+  if(IS_DEMO){el.innerHTML='<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">15</div><div class="apt-date-mon">Jun</div></div><div class="apt-info"><div class="apt-name">Luis Fernández</div><div class="apt-meta">Carlos R. · Corte + barba · 3:00pm · RD$700</div></div><span class="chip chip-green">Confirmada</span></div><div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">16</div><div class="apt-date-mon">Jun</div></div><div class="apt-info"><div class="apt-name">María García</div><div class="apt-meta">Luisa V. · Coloración · 11:00am · RD$1,200</div></div><span class="chip chip-amber">Pendiente</span></div>';return;}
+  setLoading('apts-list');
+  try{
+    const res=await apiGet('appointments',{business_id:SESSION.business_id});
+    if(!res.ok||!res.data.length){el.innerHTML='<div class="q-empty"><i class="ti ti-calendar"></i><p>Sin citas agendadas</p></div>';return;}
+    const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    el.innerHTML=res.data.map(function(a){const d=new Date(a.scheduled_at||Date.now());const stC=a.status==='confirmed'?'chip-green':a.status==='done'?'chip-hi':'chip-amber';const stL=a.status==='confirmed'?'Confirmada':a.status==='done'?'Completada':'Pendiente';return '<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">'+d.getDate()+'</div><div class="apt-date-mon">'+months[d.getMonth()]+'</div></div><div class="apt-info"><div class="apt-name">'+a.client_name+'</div><div class="apt-meta">'+(a.staff_name||'Sin asignar')+' · '+a.service_name+' · $'+(a.service_price||0)+'</div></div><span class="chip '+stC+'">'+stL+'</span></div>';}).join('');
+  }catch(e){el.innerHTML='<div class="q-empty">Error cargando citas</div>';}
+}
+async function saveAppointment(){
+  const name=document.getElementById('ma-name').value.trim();const email=document.getElementById('ma-email').value.trim();const phone=document.getElementById('ma-phone').value.trim();const svc=document.getElementById('ma-svc').value.trim();const dt=document.getElementById('ma-dt').value;const price=document.getElementById('ma-price').value;
+  const err=document.getElementById('ma-err');const btn=document.getElementById('ma-btn');
+  if(!name||!email||!dt){err.textContent='Nombre, email y fecha son requeridos.';err.style.display='block';return;}
+  err.style.display='none';btn.disabled=true;btn.innerHTML='<div class="spinner"></div>';
+  if(IS_DEMO){closeModal('modal-book-apt');showToast('Cita confirmada · Correo enviado ✓','success');loadAppointments();btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar cita';return;}
+  try{
+    const res=await apiPost('appointments/book',{business_id:SESSION.business_id,business_name:SESSION.name,client_name:name,client_email:email,client_phone:phone,service_name:svc||'Servicio',service_price:parseFloat(price)||0,scheduled_at:dt,lang:SESSION.lang||'es'});
+    if(!res.ok){err.textContent=res.error||'Error.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar cita';return;}
+    closeModal('modal-book-apt');showToast('Cita confirmada · Email enviado ✓','success');loadAppointments();btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar cita';
+  }catch(e){err.textContent='Error de conexión.';err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar cita';}
+}
+
+async function loadReport(){
+  if(IS_DEMO){window._lastReport=DEMO.report;renderReport(DEMO.report);return;}
+  setLoading('report-stats','Cargando reporte...');
+  try{const res=await apiGet('report',{business_id:SESSION.business_id});if(!res.ok){showToast('Error cargando reporte','error');return;}window._lastReport=res.data;renderReport(res.data);}catch(e){showToast('Error de conexión','error');}
+}
+function renderReport(data){
+  document.getElementById('report-stats').innerHTML='<div class="stat-card c-green"><div class="stat-icon sic-green"><i class="ti ti-users"></i></div><div class="stat-label">Atendidos hoy</div><div class="stat-val green">'+(data.total_served||0)+'</div></div><div class="stat-card c-amber"><div class="stat-icon sic-amber"><i class="ti ti-currency-dollar"></i></div><div class="stat-label">Ingresos totales</div><div class="stat-val amber">RD$'+(data.total_amount||0).toLocaleString()+'</div><div class="stat-sub">Prom. RD$'+(data.total_served?Math.round(data.total_amount/data.total_served):0)+'</div></div><div class="stat-card c-hi"><div class="stat-icon sic-hi"><i class="ti ti-chart-bar"></i></div><div class="stat-label">Ingreso promedio</div><div class="stat-val hi">RD$'+(data.total_served?Math.round(data.total_amount/data.total_served):0)+'</div><div class="stat-sub">por cliente</div></div>';
+  const staffE=Object.entries(data.by_staff||{});const svcE=Object.entries(data.by_service||{});
+  const maxA=Math.max.apply(null,staffE.map(e=>e[1].total).concat([1]));
+  const barColors=['var(--hi2)','var(--green)','var(--red)','var(--cyan)'];
+  document.getElementById('report-body').innerHTML='<div class="card"><div class="sec-title" style="margin-bottom:14px">Por empleado</div><table class="r-table"><thead><tr><th>Empleado</th><th style="text-align:right">Clientes</th><th style="text-align:right">Ingresos</th></tr></thead><tbody>'+staffE.map(function(e,i){const n=e[0],v=e[1];return '<tr><td><span class="r-av" style="background:'+avCols[i%4].bg+';color:'+avCols[i%4].color+'">'+n.split(' ').map(w=>w[0]).join('').slice(0,2)+'</span>'+n+'<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round((v.total/maxA)*100)+'%;background:'+barColors[i%4]+'"></div></div></td><td style="text-align:right;font-family:var(--mono)">'+v.count+'</td><td style="text-align:right;font-weight:700;color:var(--green);font-family:var(--mono)">RD$'+v.total.toLocaleString()+'</td></tr>';}).join('')+'<tr style="border-top:1px solid var(--border2)"><td style="font-weight:700;padding-top:12px">Total</td><td style="text-align:right;padding-top:12px;font-family:var(--mono)">'+(data.total_served||0)+'</td><td style="text-align:right;font-weight:700;color:var(--green);padding-top:12px;font-family:var(--mono)">RD$'+(data.total_amount||0).toLocaleString()+'</td></tr></tbody></table></div><div class="card"><div class="sec-title" style="margin-bottom:14px">Por servicio</div>'+svcE.map(function(e){return '<div class="svc-row"><span style="font-weight:500;color:var(--text)">'+e[0]+'</span><span style="color:var(--text3);font-family:var(--mono);font-size:12px">'+e[1].count+'×</span><span style="font-weight:700;color:var(--green);font-family:var(--mono)">RD$'+e[1].total.toLocaleString()+'</span></div>';}).join('')+'</div>';
+  const hist=data.history||[];
+  document.getElementById('report-history').innerHTML='<div class="sec-title" style="margin-bottom:14px">Historial del día</div>'+(!hist.length?'<div class="q-empty"><i class="ti ti-clock"></i><p>Sin transacciones</p></div>':hist.map((h,i)=>'<div class="hist-row"><div class="hist-num">'+(i+1)+'</div><div class="hist-info"><div class="hist-name">'+h.client+'</div><div class="hist-meta">'+h.staff+' · '+h.service+'</div></div><div class="hist-right"><div class="hist-price">RD$'+(h.amount||0).toLocaleString()+'</div><div class="hist-time">'+(h.time||'')+'</div></div></div>').join(''));
+}
+
+function svConfirm(){
+  const name=document.getElementById('sv-name').value.trim();const email=document.getElementById('sv-email').value.trim();const svc=document.getElementById('sv-svc').value.split('·')[0].trim();
+  if(!name){showToast('Ingresa tu nombre','warn');return;}
+  const q=parseInt(document.getElementById('sv-queue').textContent)||0;const pos=q+1;
+  document.getElementById('sv-pos-n').textContent=pos;document.getElementById('sv-pos-w').textContent='Espera estimada: ~'+(pos-1)*25+' min';
+  document.getElementById('sv-pos-card').style.display='block';document.getElementById('sv-queue').textContent=pos;
+  document.getElementById('sv-join-form').classList.remove('open');
+  const row=document.createElement('div');row.className='sala-q-row';
+  row.innerHTML='<div class="sala-q-num">'+pos+'</div><div style="flex:1"><div class="sala-q-name">'+name+'</div><div class="sala-q-svc"><span class="chip chip-amber" style="font-size:9px">SIN CITA</span> '+svc+'</div></div><div class="sala-q-wait">~'+(pos-1)*25+' min</div>';
+  document.getElementById('sala-queue').appendChild(row);
+  if(email)showToast('Turno #'+pos+' confirmado · Email enviado ✓','success');
+  else showToast('Turno #'+pos+' confirmado ✓','success');
+}
+function svBookApt(){
+  const name=document.getElementById('sv-apt-name').value.trim();const email=document.getElementById('sv-apt-email').value.trim();
+  const sel=document.querySelector('.ts.selected');
+  if(!name||!email){showToast('Nombre y email son requeridos','warn');return;}
+  if(!sel){showToast('Selecciona una hora','warn');return;}
+  sel.classList.remove('selected');sel.classList.add('taken');
+  document.getElementById('sv-apt-form').classList.remove('open');showToast('Cita confirmada · Revisa tu correo ✓','success');
+}
+
+function addSvcItem(){
+  const n=document.getElementById('nsn').value.trim();const d=document.getElementById('nsd').value.trim();const p=document.getElementById('nsp').value.trim();
+  if(!n)return;
+  const item=document.createElement('div');item.className='svc-item';
+  item.innerHTML='<span class="svc-name">'+n+'</span><span class="svc-dur">'+(d||'--')+' min</span><span class="svc-price">RD$'+(p||'--')+'</span><button class="svc-del" data-action="delsvc"><i class="ti ti-trash"></i></button>';
+  document.getElementById('svc-list').appendChild(item);
+  ['nsn','nsd','nsp'].forEach(id=>document.getElementById(id).value='');
+}
+
+function exportCSV(){
+  const data=window._lastReport||(IS_DEMO?DEMO.report:null);
+  if(!data){showToast('Abre el Reporte primero','warn');return;}
+  const rows=[['Empleado','Clientes','Ingresos RD$']];
+  Object.entries(data.by_staff||{}).forEach(([n,v])=>rows.push([n,v.count,v.total]));
+  rows.push([]);rows.push(['Servicio','Cantidad','Ingresos RD$']);
+  Object.entries(data.by_service||{}).forEach(([n,v])=>rows.push([n,v.count,v.total]));
+  rows.push([]);rows.push(['TOTAL','',data.total_amount||0]);
+  const csv=rows.map(r=>r.join(',')).join(String.fromCharCode(10));
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='reporte-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  showToast('CSV descargado ✓','success');
+}
+function exportPDF(){
+  const data=window._lastReport||(IS_DEMO?DEMO.report:null);
+  if(!data){showToast('Abre el Reporte primero','warn');return;}
+  const biz=IS_DEMO?DEMO.name:(SESSION.name||'Mi Negocio');
+  const date=new Date().toLocaleDateString('es-DO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const staffRows=Object.entries(data.by_staff||{}).map(([n,v])=>'<tr><td>'+n+'</td><td style="text-align:center">'+v.count+'</td><td style="text-align:right;color:#16a34a;font-weight:700">RD$'+v.total.toLocaleString()+'</td></tr>').join('');
+  const svcRows=Object.entries(data.by_service||{}).map(([n,v])=>'<tr><td>'+n+'</td><td style="text-align:center">'+v.count+'</td><td style="text-align:right;color:#16a34a;font-weight:700">RD$'+v.total.toLocaleString()+'</td></tr>').join('');
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>body{font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#1a1a2e}h1{font-size:22px;margin:0}h2{color:#5b4cf5;font-size:15px;margin:22px 0 10px}.header{border-bottom:3px solid #5b4cf5;padding-bottom:14px;margin-bottom:22px}.sub{color:#6b7280;font-size:13px;margin-top:4px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}.stat{background:#f6f6f9;border-radius:10px;padding:14px;text-align:center}.sv{font-size:26px;font-weight:700}.sl{font-size:11px;color:#6b7280;margin-top:4px}table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}th{background:#5b4cf5;color:#fff;padding:8px 12px;text-align:left;font-size:11px}td{padding:8px 12px;border-bottom:1px solid #e5e7eb}.footer{text-align:center;color:#9ca3af;font-size:11px;margin-top:32px;padding-top:14px;border-top:1px solid #e5e7eb}@media print{button{display:none}}</style></head><body>'
+    +'<div class="header"><h1>El Turno App — Reporte del día</h1><div class="sub">'+biz+' · '+date+'</div></div>'
+    +'<div class="stats"><div class="stat"><div class="sv" style="color:#16a34a">'+(data.total_served||0)+'</div><div class="sl">Clientes</div></div><div class="stat"><div class="sv" style="color:#d97706">RD$'+(data.total_amount||0).toLocaleString()+'</div><div class="sl">Ingresos</div></div><div class="stat"><div class="sv" style="color:#5b4cf5">RD$'+(data.total_served?Math.round(data.total_amount/data.total_served):0).toLocaleString()+'</div><div class="sl">Promedio</div></div></div>'
+    +'<h2>Por empleado</h2><table><thead><tr><th>Empleado</th><th style="text-align:center">Clientes</th><th style="text-align:right">Ingresos</th></tr></thead><tbody>'+staffRows+'</tbody></table>'
+    +'<h2>Por servicio</h2><table><thead><tr><th>Servicio</th><th style="text-align:center">Cantidad</th><th style="text-align:right">Ingresos</th></tr></thead><tbody>'+svcRows+'</tbody></table>'
+    +'<div class="footer">El Turno App · elturno.app</div>'
+    +'<script>window.onload=function(){window.print();}<\/script></body></html>';
+  const win=window.open('','_blank');
+  if(win){win.document.write(html);win.document.close();}
+  else showToast('Activa popups para el PDF','warn');
+}
+
+
+function openSalaFromAdmin(){
+  var slug = IS_DEMO ? DEMO.slug : SESSION.slug;
+  if(slug) loadSala(slug);
+  else showScreen('s-sala');
+}
+
+// ── SALA LOADER ──────────────────────────────────────────────────
+async function loadSala(slug) {
+  document.getElementById('sala-biz-name').textContent = slug;
+  showScreen('s-sala');
+
+  try {
+    // Load business info
+    const bizRes = await apiGet('business', {slug});
+    if(bizRes.ok && bizRes.data) {
+      const biz = bizRes.data;
+      document.getElementById('sala-biz-name').textContent = biz.name || slug;
+    }
+
+    // Load staff (chairs)
+    const staffRes = await apiGet('staff', {business_id: slug});
+    // Note: business_id here is slug-based — GAS getBusiness resolves it
+    // For now load by slug lookup
+    renderSalaChairs([]);
+
+    // Load queue
+    const queueRes = await apiGet('queue', {business_id: slug});
+    if(queueRes.ok && Array.isArray(queueRes.data)) {
+      renderSalaQueue(queueRes.data);
+    } else {
+      renderSalaQueue([]);
+    }
+  } catch(e) {
+    console.error('Sala load error:', e);
+    renderSalaQueue([]);
+    renderSalaChairs([]);
+  }
+}
+
+function renderSalaQueue(queue) {
+  const el = document.getElementById('sala-queue');
   if(!el) return;
-  const waiting = queue.filter(function(q){return q.status==='waiting'||q.status==='called';});
-  if(!waiting.length){
-    el.innerHTML = '<div class="q-empty"><i class="ti ti-mood-smile"></i><p>Cola vacía — sin clientes esperando</p></div>';
+  const waiting = queue.filter(function(q){ return q.status==='waiting' || q.status==='called'; });
+  document.getElementById('sv-queue').textContent = waiting.length;
+  if(!waiting.length) {
+    el.innerHTML = '<div class="q-empty"><i class="ti ti-mood-smile"></i><p>No hay nadie en espera ahora</p></div>';
     return;
   }
-  el.innerHTML = waiting.map(function(q,i){
-    const pos = q.position||i+1;
+  el.innerHTML = waiting.map(function(q, i) {
+    const pos = q.position || i+1;
     const wait = (pos-1)*25;
     const badge = q.type==='appointment'
       ? '<span class="chip chip-cyan" style="font-size:9px">CITA</span>'
       : '<span class="chip chip-amber" style="font-size:9px">SIN CITA</span>';
-    return '<div class="q-row">'
-      + '<div class="q-num">'+pos+'</div>'
-      + '<div class="q-info"><div class="q-name">'+(q.Name||q.name||'Cliente')+'</div>'
-      + '<div class="q-meta">'+badge+(q.service_name||'')+'</div></div>'
-      + '<div class="q-wait">~'+wait+' min</div>'
+    return '<div class="sala-q-row">'
+      + '<div class="sala-q-num">'+pos+'</div>'
+      + '<div style="flex:1"><div class="sala-q-name">'+(q.Name||q.name||'Cliente')+'</div>'
+      + '<div class="sala-q-svc">'+badge+' '+(q.service_name||'')+'</div></div>'
+      + '<div class="sala-q-wait">~'+wait+' min</div>'
       + '</div>';
   }).join('');
 }
 
-async function addToQueue(){
-  const name = document.getElementById('qn').value.trim();
-  const svc  = document.getElementById('qs').value;
-  if(!name){ showToast('Ingresa el nombre','warn'); return; }
-  if(IS_DEMO){
-    const pos = DEMO.queue.filter(function(q){return q.status==='waiting';}).length + 1;
-    DEMO.queue.push({id:'q'+Date.now(),Name:name,service_name:svc,position:pos,status:'waiting',type:'walk_in'});
-    renderQueue(DEMO.queue,'queue-rows',false);
-    renderQueue(DEMO.queue,'dash-q',true);
-    document.getElementById('d-queue').textContent  = DEMO.queue.filter(function(q){return q.status==='waiting';}).length;
-    document.getElementById('q-badge').textContent  = DEMO.queue.filter(function(q){return q.status==='waiting';}).length;
-    document.getElementById('q-count-chip').textContent = DEMO.queue.filter(function(q){return q.status==='waiting';}).length+' personas';
-    document.getElementById('qn').value='';
-    showToast(name+' → posición #'+pos,'success'); return;
-  }
-  try{
-    const res = await apiPost('queue/add',{business_id:SESSION.business_id,business_name:SESSION.name,client_name:name,service_name:svc,service_duration:25,lang:SESSION.lang||'es',type:'walk_in'});
-    if(!res.ok){ showToast(res.error||'Error','error'); return; }
-    document.getElementById('qn').value='';
-    showToast(name+' → posición #'+res.data.position,'success');
-    loadQueuePage(); loadDashboard();
-  }catch(e){ showToast('Error de conexión','error'); }
-}
-
-async function callNextForStaff(staffId, staffName){
-  if(IS_DEMO){
-    const waiting = DEMO.queue.filter(function(q){return q.status==='waiting';});
-    if(!waiting.length){ showToast('Cola vacía','warn'); return; }
-    const next = waiting[0]; next.status='called';
-    const s = DEMO.staff.find(function(x){return x.id===staffId;});
-    if(s) s.status='busy';
-    DEMO.queue = DEMO.queue.filter(function(q){return q.id!==next.id;}).map(function(q,i){return Object.assign({},q,{position:i+1});});
-    renderStaff(DEMO.staff,'dash-staff',true);
-    renderQueue(DEMO.queue,'dash-q',true);
-    document.getElementById('d-busy').textContent  = DEMO.staff.filter(function(s){return s.status==='busy';}).length;
-    document.getElementById('d-queue').textContent = DEMO.queue.filter(function(q){return q.status==='waiting';}).length;
-    document.getElementById('q-badge').textContent = DEMO.queue.filter(function(q){return q.status==='waiting';}).length;
-    showToast((next.Name||'Cliente')+' → silla de '+staffName,'success'); return;
-  }
-  try{
-    const res = await apiPost('queue/call-next',{business_id:SESSION.business_id,staff_id:staffId,staff_name:staffName});
-    if(!res.ok){ showToast(res.error||'Error','error'); return; }
-    showToast(res.data.called+' → llamado ✓','success');
-    loadDashboard(); loadQueuePage();
-  }catch(e){ showToast('Error de conexión','error'); }
-}
-
-async function finishForStaff(staffId, staffName){
-  if(IS_DEMO){
-    const s = DEMO.staff.find(function(x){return x.id===staffId;});
-    if(s) s.status='available';
-    DEMO.report.total_served++;
-    DEMO.report.total_amount += 400;
-    renderStaff(DEMO.staff,'dash-staff',true);
-    renderStaff(DEMO.staff,'full-staff',false);
-    document.getElementById('d-busy').textContent  = DEMO.staff.filter(function(s){return s.status==='busy';}).length;
-    document.getElementById('d-done').textContent  = DEMO.report.total_served;
-    document.getElementById('d-income').textContent = 'RD$'+DEMO.report.total_amount.toLocaleString();
-    showToast(staffName+' → disponible ✓','success'); return;
-  }
-  try{
-    const res = await apiPost('queue/finish',{business_id:SESSION.business_id,business_name:SESSION.name,staff_id:staffId,staff_name:staffName,amount:400,service_name:'Servicio'});
-    if(!res.ok){ showToast(res.error||'Error','error'); return; }
-    showToast('Servicio terminado ✓','success'); loadDashboard();
-  }catch(e){ showToast('Error de conexión','error'); }
-}
-
-// ── APPOINTMENTS ──────────────────────────────────────────────────
-async function loadAppointments(){
-  const el = document.getElementById('apts-list');
+function renderSalaChairs(staff) {
+  const el = document.getElementById('sala-chairs');
   if(!el) return;
-  if(IS_DEMO){
-    el.innerHTML =
-      '<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">15</div><div class="apt-date-mon">Jun</div></div><div class="apt-info"><div class="apt-name">Luis Fernández</div><div class="apt-meta">Carlos R. · Corte + barba · 3:00pm · RD$700</div></div><span class="chip chip-green">Confirmada</span></div>'
-    + '<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">15</div><div class="apt-date-mon">Jun</div></div><div class="apt-info"><div class="apt-name">Alex Núñez</div><div class="apt-meta">Andrés M. · Corte clásico · 3:30pm · RD$400</div></div><span class="chip chip-green">Confirmada</span></div>'
-    + '<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">16</div><div class="apt-date-mon">Jun</div></div><div class="apt-info"><div class="apt-name">María García</div><div class="apt-meta">Luisa V. · Coloración · 11:00am · RD$1,200</div></div><span class="chip chip-amber">Pendiente</span></div>';
+  const busy  = staff.filter(function(s){ return s.status==='busy'; }).length;
+  const free  = staff.filter(function(s){ return s.status==='available'; }).length;
+  document.getElementById('sv-busy').textContent = busy;
+  document.getElementById('sv-free').textContent = free;
+  if(!staff.length) {
+    el.innerHTML = '<div class="q-empty" style="grid-column:1/-1"><i class="ti ti-scissors"></i><p>Sin empleados registrados</p></div>';
     return;
   }
-  setLoading('apts-list');
-  try{
-    const res = await apiGet('appointments',{business_id:SESSION.business_id});
-    if(!res.ok||!res.data.length){ el.innerHTML='<div class="q-empty"><i class="ti ti-calendar"></i><p>Sin citas agendadas</p></div>'; return; }
-    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    el.innerHTML = res.data.map(function(a){
-      const d = new Date(a.scheduled_at||Date.now());
-      const stC = a.status==='confirmed'?'chip-green':a.status==='done'?'chip-hi':'chip-amber';
-      const stL = a.status==='confirmed'?'Confirmada':a.status==='done'?'Completada':'Pendiente';
-      return '<div class="apt-item"><div class="apt-date-box"><div class="apt-date-day">'+d.getDate()+'</div><div class="apt-date-mon">'+months[d.getMonth()]+'</div></div><div class="apt-info"><div class="apt-name">'+a.client_name+'</div><div class="apt-meta">'+(a.staff_name||'Sin asignar')+' · '+a.service_name+' · $'+(a.service_price||0)+'</div></div><span class="chip '+stC+'">'+stL+'</span></div>';
-    }).join('');
-  }catch(e){ el.innerHTML='<div class="q-empty">Error cargando citas</div>'; }
+  el.innerHTML = staff.map(function(s) {
+    const sc = s.status==='busy'?'busy':s.status==='day_off'?'day_off':'free';
+    const st = s.status==='busy'?'Ocupado':s.status==='day_off'?'Día libre':'Disponible ahora';
+    return '<div class="sala-chair '+sc+'">'
+      + '<i class="ti ti-scissors" aria-hidden="true"></i>'
+      + '<div class="sala-chair-name">'+(s.name||'')+'</div>'
+      + '<div class="sala-chair-st">'+st+'</div>'
+      + '</div>';
+  }).join('');
 }
 
-async function saveAppointment(){
-  const name  = document.getElementById('ma-name').value.trim();
-  const email = document.getElementById('ma-email').value.trim();
-  const phone = document.getElementById('ma-phone').value.trim();
-  const svc   = document.getElementById('ma-svc').value.trim();
-  const dt    = document.getElementById('ma-dt').value;
-  const price = document.getElementById('ma-price').value;
-  const err   = document.getElementById('ma-err');
-  const btn   = document.getElementById('ma-btn');
-  if(!name||!email||!dt){ err.textContent='Nombre, email y fecha son requeridos.'; err.style.display='block'; return; }
-  err.style.display='none';
-  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>';
-  if(IS_DEMO){
-    closeModal('modal-book-apt');
-    showToast('Cita confirmada · Correo enviado a '+email,'success');
-    loadAppointments();
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar'; return;
-  }
-  try{
-    const res = await apiPost('appointments/book',{business_id:SESSION.business_id,business_name:SESSION.name,client_name:name,client_email:email,client_phone:phone,service_name:svc||'Servicio',service_price:parseFloat(price)||0,scheduled_at:dt,lang:SESSION.lang||'es'});
-    if(!res.ok){ err.textContent=res.error||'Error.'; err.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar'; return; }
-    closeModal('modal-book-apt');
-    showToast('Cita confirmada · Email enviado ✓','success');
-    loadAppointments();
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar';
-  }catch(e){ err.textContent='Error de conexión.'; err.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-calendar-check"></i>Confirmar'; }
-}
-
-// ── REPORT ────────────────────────────────────────────────────────
-async function loadReport(){
-  if(IS_DEMO){ renderReport(DEMO.report); return; }
-  setLoading('report-stats','Cargando reporte...');
-  try{
-    const res = await apiGet('report',{business_id:SESSION.business_id});
-    if(!res.ok){ showToast('Error cargando reporte','error'); return; }
-    renderReport(res.data);
-  }catch(e){ showToast('Error de conexión','error'); }
-}
-
-function renderReport(data){
-  document.getElementById('report-stats').innerHTML =
-    '<div class="stat-card c-green"><div class="stat-icon sic-green"><i class="ti ti-users"></i></div><div class="stat-label">Atendidos hoy</div><div class="stat-val green">'+(data.total_served||0)+'</div></div>'
-  + '<div class="stat-card c-amber"><div class="stat-icon sic-amber"><i class="ti ti-currency-dollar"></i></div><div class="stat-label">Ingresos totales</div><div class="stat-val amber">RD$'+(data.total_amount||0).toLocaleString()+'</div><div class="stat-sub">Prom. RD$'+(data.total_served?Math.round(data.total_amount/data.total_served):0)+'</div></div>'
-  + '<div class="stat-card c-hi"><div class="stat-icon sic-hi"><i class="ti ti-chart-bar"></i></div><div class="stat-label">Ingreso promedio</div><div class="stat-val hi">RD$'+(data.total_served?Math.round(data.total_amount/data.total_served):0)+'</div><div class="stat-sub">por cliente</div></div>';
-
-  const staffE   = Object.entries(data.by_staff||{});
-  const svcE     = Object.entries(data.by_service||{});
-  const maxA     = Math.max.apply(null, staffE.map(function(e){return e[1].total;}).concat([1]));
-  const barColors = ['var(--hi2)','var(--green)','var(--red)','var(--cyan)'];
-
-  document.getElementById('report-body').innerHTML =
-    '<div class="card"><div class="sec-title" style="margin-bottom:14px">Por empleado</div>'
-  + '<table class="r-table"><thead><tr><th>Empleado</th><th style="text-align:right">Clientes</th><th style="text-align:right">Ingresos</th></tr></thead><tbody>'
-  + staffE.map(function(e,i){
-      const n=e[0], v=e[1];
-      return '<tr><td><span class="r-av" style="background:'+avCols[i%4].bg+';color:'+avCols[i%4].color+'">'+n.split(' ').map(function(w){return w[0];}).join('').slice(0,2)+'</span>'+n
-        + '<div class="bar-wrap"><div class="bar-fill" style="width:'+Math.round((v.total/maxA)*100)+'%;background:'+barColors[i%4]+'"></div></div>'
-        + '</td><td style="text-align:right;color:var(--text2);font-family:var(--mono)">'+v.count+'</td>'
-        + '<td style="text-align:right;font-weight:700;color:var(--green);font-family:var(--mono)">RD$'+v.total.toLocaleString()+'</td></tr>';
-    }).join('')
-  + '<tr style="border-top:1px solid var(--border2)"><td style="font-weight:700;padding-top:12px;color:var(--text)">Total</td><td style="text-align:right;font-weight:700;padding-top:12px;font-family:var(--mono)">'+(data.total_served||0)+'</td><td style="text-align:right;font-weight:700;color:var(--green);padding-top:12px;font-family:var(--mono)">RD$'+(data.total_amount||0).toLocaleString()+'</td></tr>'
-  + '</tbody></table></div>'
-  + '<div class="card"><div class="sec-title" style="margin-bottom:14px">Por servicio</div>'
-  + svcE.map(function(e){return '<div class="svc-row"><span style="font-weight:500;color:var(--text)">'+e[0]+'</span><span style="color:var(--text3);font-family:var(--mono);font-size:12px">'+e[1].count+'×</span><span style="font-weight:700;color:var(--green);font-family:var(--mono)">RD$'+e[1].total.toLocaleString()+'</span></div>';}).join('')
-  + '</div>';
-
-  const hist = data.history||[];
-  document.getElementById('report-history').innerHTML =
-    '<div class="sec-title" style="margin-bottom:14px">Historial del día</div>'
-  + (!hist.length ? '<div class="q-empty"><i class="ti ti-clock"></i><p>Sin transacciones registradas</p></div>'
-    : hist.map(function(h,i){
-        return '<div class="hist-row"><div class="hist-num">'+(i+1)+'</div><div class="hist-info"><div class="hist-name">'+h.client+'</div><div class="hist-meta">'+h.staff+' · '+h.service+'</div></div><div class="hist-right"><div class="hist-price">RD$'+(h.amount||0).toLocaleString()+'</div><div class="hist-time">'+(h.time||'')+'</div></div></div>';
-      }).join(''));
-}
-
-// ── SALA PÚBLICA ──────────────────────────────────────────────────
-function svConfirm(){
-  const name  = document.getElementById('sv-name').value.trim();
-  const email = document.getElementById('sv-email').value.trim();
-  const svc   = document.getElementById('sv-svc').value.split('·')[0].trim();
-  if(!name){ showToast('Ingresa tu nombre','warn'); return; }
-  const q   = parseInt(document.getElementById('sv-queue').textContent)||0;
-  const pos = q + 1;
-  document.getElementById('sv-pos-n').textContent = pos;
-  document.getElementById('sv-pos-w').textContent = 'Espera estimada: ~'+(pos-1)*25+' min';
-  document.getElementById('sv-pos-card').style.display = 'block';
-  document.getElementById('sv-queue').textContent = pos;
-  document.getElementById('sv-join-form').classList.remove('open');
-  const row = document.createElement('div');
-  row.className = 'sala-q-row';
-  row.innerHTML = '<div class="sala-q-num">'+pos+'</div><div style="flex:1"><div class="sala-q-name">'+name+'</div><div class="sala-q-svc"><span class="chip chip-amber" style="font-size:9px">SIN CITA</span> '+svc+'</div></div><div class="sala-q-wait">~'+(pos-1)*25+' min</div>';
-  document.getElementById('sala-queue').appendChild(row);
-  if(email) showToast('Turno #'+pos+' confirmado · Email enviado ✓','success');
-  else showToast('Turno #'+pos+' confirmado ✓','success');
-}
-
-function svBookApt(){
-  const name  = document.getElementById('sv-apt-name').value.trim();
-  const email = document.getElementById('sv-apt-email').value.trim();
-  const sel   = document.querySelector('.ts.selected');
-  if(!name||!email){ showToast('Nombre y email son requeridos','warn'); return; }
-  if(!sel){ showToast('Selecciona una hora','warn'); return; }
-  sel.classList.remove('selected'); sel.classList.add('taken');
-  document.getElementById('sv-apt-form').classList.remove('open');
-  showToast('Cita confirmada · Revisa tu correo ✓','success');
-}
-
-// ── SETTINGS ─────────────────────────────────────────────────────
-function addSvcItem(){
-  const n = document.getElementById('nsn').value.trim();
-  const d = document.getElementById('nsd').value.trim();
-  const p = document.getElementById('nsp').value.trim();
-  if(!n) return;
-  const item = document.createElement('div');
-  item.className = 'svc-item';
-  item.innerHTML = '<span class="svc-name">'+n+'</span><span class="svc-dur">'+(d||'--')+' min</span><span class="svc-price">RD$'+(p||'--')+'</span><button class="svc-del" data-action="delsvc"><i class="ti ti-trash"></i></button>';
-  document.getElementById('svc-list').appendChild(item);
-  ['nsn','nsd','nsp'].forEach(function(id){ document.getElementById(id).value=''; });
-}
-
-// ── INIT ─────────────────────────────────────────────────────────
-document.getElementById('sv-apt-date').valueAsDate = new Date();
-try{ document.getElementById('ma-dt').min = new Date().toISOString().slice(0,16); }catch(e){}
-
-// Auto-show sala pública if ?sala= param in URL
+// Auto-show sala from URL param
 (function(){
-  var params = new URLSearchParams(window.location.search);
-  var sala = params.get('sala');
-  if(sala){
-    document.getElementById('sala-biz-name').textContent = sala;
-    showScreen('s-sala');
-    // Try to load real data from GAS
-    apiGet('business', {slug: sala}).then(function(res){
-      if(res.ok && res.data){
-        document.getElementById('sala-biz-name').textContent = res.data.name || sala;
-      }
-    }).catch(function(){});
-  }
+  const params = new URLSearchParams(window.location.search);
+  const sala = params.get('sala');
+  if(sala) loadSala(sala);
 })();
+
+document.getElementById('sv-apt-date').valueAsDate=new Date();
+try{document.getElementById('ma-dt').min=new Date().toISOString().slice(0,16);}catch(e){}
 </script>
 </body>
 </html>

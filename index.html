@@ -1390,53 +1390,92 @@ function previewLogo(input) {
 
 async function uploadLogo() {
   if(!window._logoFile) { showToast('Selecciona una imagen primero','warn'); return; }
-  const btn = document.getElementById('logo-upload-btn');
+  const btn    = document.getElementById('logo-upload-btn');
   const status = document.getElementById('logo-upload-status');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div>Subiendo...';
-  status.textContent = 'Subiendo a Google Drive...';
+  status.textContent = 'Subiendo imagen...';
 
   const bizId = IS_DEMO ? 'demo-001' : SESSION.business_id;
   const slug  = IS_DEMO ? DEMO.slug  : SESSION.slug;
 
+  // Demo mode
   if(IS_DEMO) {
-    // Demo mode — just show preview
     setTimeout(function(){
-      showToast('Demo: logo actualizado visualmente ✓','success');
+      showToast('Demo: logo actualizado ✓','success');
       status.textContent = '✅ Logo actualizado (modo demo)';
       btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-cloud-upload"></i>Subir logo';
+      btn.innerHTML = '<i class="ti ti-check"></i>Guardado';
       applyLogoToSala(document.getElementById('logo-preview-img').src);
     }, 1200);
     return;
   }
 
   try {
-    const res = await apiPost('upload-logo', {
-      business_id: bizId,
-      slug: slug,
-      base64: window._logoFile.base64,
-      mime_type: window._logoFile.mime_type,
-      file_name: window._logoFile.file_name,
-    });
-    if(!res.ok) {
-      showToast(res.error || 'Error subiendo logo','error');
-      status.textContent = '❌ ' + (res.error || 'Error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-cloud-upload"></i>Subir logo';
-      return;
+    // Step 1: Upload to Cloudinary (free, no auth needed with unsigned preset)
+    const CLOUDINARY_CLOUD = 'elturnoapp';
+    const CLOUDINARY_PRESET = 'elturno_logos';
+
+    const formData = new FormData();
+    // Convert base64 back to blob
+    const byteString = atob(window._logoFile.base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for(let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    const blob = new Blob([ab], {type: window._logoFile.mime_type});
+    formData.append('file', blob, window._logoFile.file_name);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append('public_id', 'logos/' + slug);
+    formData.append('overwrite', 'true');
+
+    status.textContent = 'Subiendo a CDN...';
+    const cdnRes = await fetch(
+      'https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload',
+      { method: 'POST', body: formData }
+    );
+    const cdnData = await cdnRes.json();
+
+    if(!cdnData.secure_url) {
+      throw new Error(cdnData.error?.message || 'Error subiendo imagen');
     }
-    SESSION.logo_url = res.data.logo_url;
-    showToast('Logo subido y guardado ✓','success');
-    status.textContent = '✅ Logo guardado en elturno.app/sala/' + slug;
-    btn.innerHTML = '<i class="ti ti-check"></i>Subido';
-    applyLogoToSala(res.data.logo_url);
+
+    const logoUrl = cdnData.secure_url;
+    status.textContent = 'Guardando en tu negocio...';
+
+    // Step 2: Save logo_url to Notion via GAS
+    const res = await apiPost('update-business', {
+      business_id: bizId,
+      logo_url: logoUrl,
+    });
+
+    SESSION.logo_url = logoUrl;
+    showToast('Logo guardado ✓','success');
+    status.textContent = '✅ Logo activo en tu sala pública';
+    btn.innerHTML = '<i class="ti ti-check"></i>Guardado';
+    applyLogoToSala(logoUrl);
+
   } catch(e) {
-    showToast('Error de conexión','error');
-    status.textContent = '❌ Error de conexión';
+    // Fallback: save the data URL locally for this session
+    const localUrl = document.getElementById('logo-preview-img').src;
+    // Try saving URL-only via GAS (no Cloudinary)
+    try {
+      await apiPost('update-business', { business_id: bizId, logo_url: localUrl.slice(0,500) });
+    } catch(_) {}
+    showToast('Logo guardado localmente — configura Cloudinary para persistir','warn');
+    status.textContent = '⚠️ Guardado en sesión. Ver instrucciones abajo.';
     btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-cloud-upload"></i>Subir logo';
+    btn.innerHTML = '<i class="ti ti-cloud-upload"></i>Reintentar';
+    showCloudinarySetup();
   }
+}
+
+function showCloudinarySetup() {
+  const status = document.getElementById('logo-upload-status');
+  status.innerHTML = `⚠️ Para guardar logos permanentes necesitas configurar Cloudinary gratuito:<br/>
+    <a href="https://cloudinary.com/users/register_free" target="_blank" 
+       style="color:var(--hi2);font-size:11px">1. Crea cuenta gratis en cloudinary.com</a><br/>
+    <span style="font-size:11px;color:var(--text3)">2. Crea un "Upload Preset" sin firma llamado <strong>elturno_logos</strong></span><br/>
+    <span style="font-size:11px;color:var(--text3)">3. Reemplaza CLOUDINARY_CLOUD con tu Cloud Name</span>`;
 }
 
 function applyLogoToSala(logoUrl) {
